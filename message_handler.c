@@ -16,7 +16,7 @@ int process_message(char *buffer, char *sender, int sender_socket) {
     // Comando /msg para mensajes privados
     if (sscanf(buffer, "/msg %s %[^\n]", recipient, message) == 2) {
         char full_message[BUFFER_SIZE];
-        sprintf(full_message, "%s (privado): %s\n", sender, message);
+        snprintf(full_message, sizeof(full_message), "PMSG: %s (private): %s\n", sender, message);
         send_private_message(full_message, recipient);
     } else if (strcmp(buffer, "/list") == 0) {
         list_connected_clients(sender_socket, sender);
@@ -26,14 +26,14 @@ int process_message(char *buffer, char *sender, int sender_socket) {
     } else {
         // Se difunden los mensajes a todos los clientes
         char full_message[BUFFER_SIZE];
-        sprintf(full_message, "%s: %s\n", sender, buffer);
+        sprintf(full_message, "MSG: %s: %s\n", sender, buffer);
         broadcast_message(full_message, sender_socket);
     }
 }
 
 // Se listan los clientes conectados
 void list_connected_clients(int client_socket, char *username_now) {
-    char client_list[BUFFER_SIZE] = "Clientes conectados:\n";
+    char client_list[BUFFER_SIZE] = "UPL: Connected clients:\n";
     pthread_mutex_lock(&clients_mutex);
     for (int i = 0; i < MAX_CLIENTS; ++i) {
         if (clients[i].socket != 0) {

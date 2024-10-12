@@ -18,7 +18,7 @@ void start_server(int server_socket) {
     socklen_t client_addr_len = sizeof(client_addr);
     int client_socket;
     pthread_t tid;
-    printf("Servidor iniciado\n");
+    printf("CONN: Server started\n");
     while ((client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_addr_len)) >= 0) {
         pthread_mutex_lock(&clients_mutex);
         int *new_client = malloc(sizeof(int));
@@ -31,7 +31,7 @@ void start_server(int server_socket) {
         }
         pthread_mutex_unlock(&clients_mutex);
     }
-    printf("Se crearon los distintos hilos para cada cliente.\n");
+    printf("The different threads were created for each client.\n");
 }
 
 // Se maneja la conexión del cliente
@@ -51,7 +51,7 @@ void *handle_client_connection(void* new_client_socket) {
     // Se recibe el nombre de usuario
     int bytes_received = read(client_socket, username, USERNAME_SIZE);
     if (bytes_received < 0) {
-        perror("Error al recibir el nombre de usuario.");
+        perror("ERR: Error receiving username.");
         return 0;
     }
 
@@ -65,7 +65,7 @@ void *handle_client_connection(void* new_client_socket) {
     }
     pthread_mutex_unlock(&clients_mutex);
 
-    sprintf(message, "%s se ha conectado\n", username);
+    snprintf(message, sizeof(message),"CONN: %s has been connected\n", username);
     printf("%s", message);
 
     // Se reciben los mensajes del cliente
@@ -89,7 +89,7 @@ void *handle_client_connection(void* new_client_socket) {
     }
     pthread_mutex_unlock(&clients_mutex);
 
-    sprintf(message, "%s se ha desconectado\n", username);
+    snprintf(message, sizeof(message),"DISC: %s has been disconnected\n", username);
     printf("%s", message);
     close(client_socket);
 }

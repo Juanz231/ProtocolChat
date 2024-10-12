@@ -15,11 +15,11 @@ int main() {
     char ip_address[INET_ADDRSTRLEN], port_str[6]; 
     int port;
 
-    printf("Ingresa la dirección IP del servidor (presiona Enter para 127.0.0.1): ");
+    printf("Enter the server's IP address  (press Enter for 127.0.0.1): ");
     fgets(ip_address, INET_ADDRSTRLEN, stdin);
     ip_address[strcspn(ip_address, "\n")] = '\0';  // Eliminar el salto de línea
 
-    printf("Ingresa el puerto del servidor (presiona Enter para 8080): ");
+    printf("Enter the server port (press Enter for 8080): ");
     fgets(port_str, 6, stdin);
     port_str[strcspn(port_str, "\n")] = '\0';  // Eliminar el salto de línea
 
@@ -36,7 +36,7 @@ int main() {
     // Crear el socket
     client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (client_socket == -1) {
-        perror("Error al crear el socket");
+        perror("ERR: Error creating socket.");
         exit(EXIT_FAILURE);
     }
     
@@ -44,30 +44,30 @@ int main() {
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
     if (inet_pton(AF_INET, ip_address, &server_addr.sin_addr) <= 0) {
-        perror("Dirección IP inválida");
+        perror("ERR: Invalid IP address.");
         close(client_socket);
         exit(EXIT_FAILURE);
     }
 
     // Conectar al servidor
     if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
-        perror("Error al conectar con el servidor");
+        perror("ERR: Error connecting to server.");
         close(client_socket);
         exit(EXIT_FAILURE);
     }
     
     // Pide nombre de Usuario
-    printf("Ingresa tu nombre de usuario: ");
+    printf("Enter your username: ");
     fgets(username, USERNAME_SIZE, stdin);
     username[strcspn(username, "\n")] = '\0';  // Eliminar salto de línea 
     if (write(client_socket, username, strlen(username)) < 0){
-      perror("Error al enviar el nombre de usuario");
+      perror("ERR: Error al enviar el nombre de usuario.");
       return 0;
     }
     // Crear un hilo para recibir mensajes
     pthread_t receive_thread;
     if (pthread_create(&receive_thread, NULL, receive_messages, (void*)&client_socket) != 0) {
-        perror("Error al crear el hilo de recepción");
+        perror("ERR: Error creating receiving thread.");
         close(client_socket);
         exit(EXIT_FAILURE);
     }
@@ -79,13 +79,13 @@ int main() {
 
         //Si el cliente escribe /exit se desconecta del servidor
         if (strcmp(buffer, "/exit") == 0) {
-            printf("Desconectándote del servidor...\n");
+            printf("DISC: Disconnecting from server...\n");
             send(client_socket, buffer, BUFFER_SIZE, 0);  // Notificar al servidor
             break;  // Salir del bucle para cerrar la conexión
         }
 
         if (send(client_socket, buffer, BUFFER_SIZE, 0) == -1) {
-            perror("Error al enviar el mensaje");
+            perror("ERR: Error sending message.");
             break;
         }
 
@@ -110,10 +110,10 @@ void *receive_messages(void *socket_fd) {
         if (receive > 0) {
             printf("%s", buffer);
         } else if (receive == 0) {
-            printf("Conexión cerrada por el servidor.\n");
+            printf("DISC: Connection closed by server.\n");
             break;
         } else {
-            perror("Error al recibir mensaje");
+            perror("ERR: Error receiving message.");
             break;
         }
     }

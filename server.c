@@ -14,7 +14,7 @@ int main() {
     // Se crea el socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket == 0) {
-        perror("Error al crear el socket");
+        perror("ERR: Error creating socket");
         exit(EXIT_FAILURE);
     }
 
@@ -25,17 +25,17 @@ int main() {
 
     // Se enlaza el socket al puerto
     if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Error en bind");
+        perror("ERR: Error in bind");
         exit(EXIT_FAILURE);
     }
 
     // Se escuchan las conexiones
     if (listen(server_socket, MAX_CLIENTS) < 0) {
-        perror("Error en listen");
+        perror("ERR: Error in listen");
         exit(EXIT_FAILURE);
     }
 
-    printf("Servidor escuchando en el puerto %d...\n", SERVER_PORT);
+    printf("Server listening on port %d...\n", SERVER_PORT);
     start_server(server_socket);
 
     close(server_socket);
