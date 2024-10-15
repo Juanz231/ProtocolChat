@@ -27,7 +27,7 @@ int main() {
 
     // Use default values if none provided    
     if (strlen(ip_address) == 0) {
-        strcpy(ip_address, "12// Create the client socket7.0.0.1");
+        strcpy(ip_address, "127.0.0.1");
     }
     if (strlen(port_str) == 0) {
         port = 8080;
