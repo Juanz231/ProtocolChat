@@ -68,6 +68,10 @@ void *handle_client_connection(void* new_client_socket) {
     snprintf(message, sizeof(message),"CONN: %s has been connected\n", username);
     printf("%s", message);
 
+    char connect_message[BUFFER_SIZE];
+    snprintf(connect_message,sizeof(connect_message), "CONN: %s has  joined the chat. \n", username);
+    broadcast_message(connect_message, client_socket);
+
     // Se reciben los mensajes del cliente
     while (recv(client_socket, buffer, BUFFER_SIZE, 0) > 0) {
         buffer[strcspn(buffer, "\n")] = '\0';

@@ -73,13 +73,20 @@ void broadcast_message(char *message, int exclude_socket) {
 
 // Se remueve al cliente de la lista
 void remove_client(int client_socket) {
+    char username[USERNAME_SIZE]={0};
     pthread_mutex_lock(&clients_mutex);
     for (int i = 0; i < MAX_CLIENTS; ++i) {
         if (clients[i].socket == client_socket) {
+            strcpy(username, clients[i].username);
             clients[i].socket = 0;  // Marcar el cliente como desconectado
             memset(clients[i].username, 0, sizeof(clients[i].username));  // Limpiar el nombre de usuario
             break;
         }
     }
     pthread_mutex_unlock(&clients_mutex);
+    char disconnect_message[BUFFER_SIZE];
+    snprintf(disconnect_message, sizeof(disconnect_message), "CONN: %s has disconnected.\n", username);
+
+    // Difundir el mensaje a todos los demás clientes
+    broadcast_message(disconnect_message, client_socket); 
 }
