@@ -15,32 +15,34 @@ int main() {
     char ip_address[INET_ADDRSTRLEN], port_str[6]; 
     int port;
 
+    // Ask for the server's IP address
     printf("Enter the server's IP address  (press Enter for 127.0.0.1): ");
     fgets(ip_address, INET_ADDRSTRLEN, stdin);
-    ip_address[strcspn(ip_address, "\n")] = '\0';  // Eliminar el salto de línea
+    ip_address[strcspn(ip_address, "\n")] = '\0';  // Remove newline
 
+    // Ask for the server's port
     printf("Enter the server port (press Enter for 8080): ");
     fgets(port_str, 6, stdin);
-    port_str[strcspn(port_str, "\n")] = '\0';  // Eliminar el salto de línea
+    port_str[strcspn(port_str, "\n")] = '\0';  // Remove newline
 
-    // Si el usuario no ingresa nada, usar valores predeterminados
+    // Use default values if none provided    
     if (strlen(ip_address) == 0) {
-        strcpy(ip_address, "127.0.0.1");
+        strcpy(ip_address, "12// Create the client socket7.0.0.1");
     }
     if (strlen(port_str) == 0) {
         port = 8080;
     } else {
-        port = atoi(port_str);  // Convertir el puerto a número
+        port = atoi(port_str); // Convert port to an integer
     }
 
-    // Crear el socket
+    // Create the client socket
     client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (client_socket == -1) {
         perror("ERR: Error creating socket.");
         exit(EXIT_FAILURE);
     }
-    
-    // Configurar la dirección del servidor
+
+    // Set up the server address
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
     if (inet_pton(AF_INET, ip_address, &server_addr.sin_addr) <= 0) {
@@ -49,22 +51,22 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    // Conectar al servidor
+    // Connect to the server
     if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
         perror("ERR: Error connecting to server.");
         close(client_socket);
         exit(EXIT_FAILURE);
     }
     
-    // Pide nombre de Usuario
+    // Ask for the username
     printf("Enter your username: ");
     fgets(username, USERNAME_SIZE, stdin);
-    username[strcspn(username, "\n")] = '\0';  // Eliminar salto de línea 
+    username[strcspn(username, "\n")] = '\0';  // Remove newline
     if (write(client_socket, username, strlen(username)) < 0){
       perror("ERR: Error al enviar el nombre de usuario.");
       return 0;
     }
-    // Crear un hilo para recibir mensajes
+    // Create a thread to receive messages from the server
     pthread_t receive_thread;
     if (pthread_create(&receive_thread, NULL, receive_messages, (void*)&client_socket) != 0) {
         perror("ERR: Error creating receiving thread.");
@@ -72,16 +74,16 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    // Enviar mensajes al servidor
+    // Send messages to the server
     while (1) {
         fgets(buffer, BUFFER_SIZE, stdin);
-        buffer[strcspn(buffer, "\n")] = '\0';  // Eliminar el salto de línea
+        buffer[strcspn(buffer, "\n")] = '\0';  // Remove newline
 
-        //Si el cliente escribe /exit se desconecta del servidor
+        // If the client types /exit, disconnect from the server
         if (strcmp(buffer, "/exit") == 0) {
             printf("DISC: Disconnecting from server...\n");
-            send(client_socket, buffer, BUFFER_SIZE, 0);  // Notificar al servidor
-            break;  // Salir del bucle para cerrar la conexión
+            send(client_socket, buffer, BUFFER_SIZE, 0);  // Notify the server
+            break;  // Exit the loop to close the connection
         }
 
         if (send(client_socket, buffer, BUFFER_SIZE, 0) == -1) {
@@ -91,15 +93,15 @@ int main() {
 
     }
 
-    // Esperar a que el hilo de recepción termine
+    // Wait for the receiving thread to finish
     pthread_join(receive_thread, NULL);
 
-    // Cerrar el socket
+    // Close the client socket
     close(client_socket);
     return 0;
 }
 
-// Función para recibir mensajes del servidor
+// Function to receive messages from the server
 void *receive_messages(void *socket_fd) {
     int client_socket = *(int*)socket_fd;
     char buffer[BUFFER_SIZE];

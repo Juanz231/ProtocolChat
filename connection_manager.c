@@ -12,7 +12,7 @@
 Client clients[MAX_CLIENTS] = {0};
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-// Se inicia el servidor
+// Start the server and accept client connections
 void start_server(int server_socket) {
     struct sockaddr_in client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
@@ -31,30 +31,22 @@ void start_server(int server_socket) {
         }
         pthread_mutex_unlock(&clients_mutex);
     }
-    printf("The different threads were created for each client.\n");
 }
 
-// Se maneja la conexión del cliente
+// Handle an individual client's connection
 void *handle_client_connection(void* new_client_socket) {
     int client_socket = *((int *) new_client_socket);
     free(new_client_socket);
     char username[USERNAME_SIZE], buffer[BUFFER_SIZE], message[BUFFER_SIZE];
-    
-    // char * welcome_message = "Bienvenido al chat, ingresa tu nombre de usuario: ";
-    // int wrr;
-    
-    // if ((wrr = write(client_socket, welcome_message, strlen(welcome_message))) < 0){
-    //    perror("Error al enviar la solicitud");
-    //    return 0;
-    // }
 
-    // Se recibe el nombre de usuario
+    // Receive the client's username
     int bytes_received = read(client_socket, username, USERNAME_SIZE);
     if (bytes_received < 0) {
         perror("ERR: Error receiving username.");
         return 0;
     }
 
+    // Store the client's socket and username in the clients array
     pthread_mutex_lock(&clients_mutex);
     for (int i = 0; i < MAX_CLIENTS; ++i) {
         if (clients[i].socket == 0) {
@@ -68,7 +60,7 @@ void *handle_client_connection(void* new_client_socket) {
     snprintf(message, sizeof(message),"CONN: %s has been connected\n", username);
     printf("%s", message);
 
-    // Se reciben los mensajes del cliente
+    // Handle messages received from the client
     while (recv(client_socket, buffer, BUFFER_SIZE, 0) > 0) {
         buffer[strcspn(buffer, "\n")] = '\0';
 
@@ -79,7 +71,7 @@ void *handle_client_connection(void* new_client_socket) {
 
     }
 
-    // Se desconecta el cliente
+    // Disconnect the client and remove them from the clients array
     pthread_mutex_lock(&clients_mutex);
     for (int i = 0; i < MAX_CLIENTS; ++i) {
         if (clients[i].socket == client_socket) {

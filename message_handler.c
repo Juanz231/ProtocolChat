@@ -9,29 +9,34 @@
 extern Client clients[MAX_CLIENTS];
 extern pthread_mutex_t clients_mutex;
 
-// Función principal para el manejo de mensajes
+// Main function for processing messages from clients
 int process_message(char *buffer, char *sender, int sender_socket) {
     char recipient[USERNAME_SIZE], message[BUFFER_SIZE];
 
-    // Comando /msg para mensajes privados
+    // Private message command /msg
     if (sscanf(buffer, "/msg %s %[^\n]", recipient, message) == 2) {
         char full_message[BUFFER_SIZE];
         snprintf(full_message, sizeof(full_message), "PMSG: %s (private): %s\n", sender, message);
         send_private_message(full_message, recipient);
-    } else if (strcmp(buffer, "/list") == 0) {
+    }
+    // List command to show connected clients
+    else if (strcmp(buffer, "/list") == 0) {
         list_connected_clients(sender_socket, sender);
-    } else if (strcmp(buffer, "/exit") == 0){
+    } 
+    // Exit command to disconnect the client
+    else if (strcmp(buffer, "/exit") == 0){
         remove_client(sender_socket);
         return 1; 
-    } else {
-        // Se difunden los mensajes a todos los clientes
+    } 
+    // Broadcast messages to all clients
+    else {
         char full_message[BUFFER_SIZE];
         sprintf(full_message, "MSG: %s: %s\n", sender, buffer);
         broadcast_message(full_message, sender_socket);
     }
 }
 
-// Se listan los clientes conectados
+// List all connected clients
 void list_connected_clients(int client_socket, char *username_now) {
     char client_list[BUFFER_SIZE] = "UPL: Connected clients:\n";
     pthread_mutex_lock(&clients_mutex);
@@ -48,7 +53,7 @@ void list_connected_clients(int client_socket, char *username_now) {
     send(client_socket, client_list, strlen(client_list), 0);
 }
 
-// Se envían los mensajes privados
+// Send a private message to a specific client
 void send_private_message(char *message, char *recipient) {
     pthread_mutex_lock(&clients_mutex);
     for (int i = 0; i < MAX_CLIENTS; ++i) {
@@ -60,7 +65,7 @@ void send_private_message(char *message, char *recipient) {
     pthread_mutex_unlock(&clients_mutex);
 }
 
-// Se difunden los mensajes a todos los clientes
+// Broadcast a message to all connected clients, excluding the sender
 void broadcast_message(char *message, int exclude_socket) {
     pthread_mutex_lock(&clients_mutex);
     for (int i = 0; i < MAX_CLIENTS; ++i) {
@@ -71,13 +76,13 @@ void broadcast_message(char *message, int exclude_socket) {
     pthread_mutex_unlock(&clients_mutex);
 }
 
-// Se remueve al cliente de la lista
+// Remove a client from the clients list when they disconnect
 void remove_client(int client_socket) {
     pthread_mutex_lock(&clients_mutex);
     for (int i = 0; i < MAX_CLIENTS; ++i) {
         if (clients[i].socket == client_socket) {
-            clients[i].socket = 0;  // Marcar el cliente como desconectado
-            memset(clients[i].username, 0, sizeof(clients[i].username));  // Limpiar el nombre de usuario
+            clients[i].socket = 0;  // Mark client as disconnected
+            memset(clients[i].username, 0, sizeof(clients[i].username));  // Clear the username
             break;
         }
     }
