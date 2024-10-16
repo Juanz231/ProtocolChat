@@ -59,6 +59,7 @@ void *handle_client_connection(void* new_client_socket) {
 
     snprintf(message, sizeof(message),"CONN: %s has been connected\n", username);
     printf("%s", message);
+    broadcast_message(message, client_socket);
 
     // Handle messages received from the client
     while (recv(client_socket, buffer, BUFFER_SIZE, 0) > 0) {
@@ -83,5 +84,6 @@ void *handle_client_connection(void* new_client_socket) {
 
     snprintf(message, sizeof(message),"DISC: %s has been disconnected\n", username);
     printf("%s", message);
+    broadcast_message(message, client_socket);
     close(client_socket);
 }

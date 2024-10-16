@@ -29,10 +29,16 @@ int process_message(char *buffer, char *sender, int sender_socket) {
         return 1; 
     } 
     // Broadcast messages to all clients
-    else {
+    else if(sscanf(buffer, "/all %s %[^\n]", message) == 1){
         char full_message[BUFFER_SIZE];
-        sprintf(full_message, "MSG: %s: %s\n", sender, buffer);
+        sprintf(full_message, "MSG: %s: %s\n", sender, message);
         broadcast_message(full_message, sender_socket);
+    }
+    else {
+        char correction_message[BUFFER_SIZE];
+        char* error_message = "Enter one of the following commands:\n /msg <username> <message> (for private messages)\n /list (to view users list)\n /all <message> (for broadcast a message)\n /exit (to disconnect from server)\n";
+        strcpy(correction_message, error_message);
+        send(sender_socket, correction_message, strlen(error_message), 0);
     }
 }
 
@@ -88,3 +94,6 @@ void remove_client(int client_socket) {
     }
     pthread_mutex_unlock(&clients_mutex);
 }
+
+// Notify connection or disconnection of another user
+
