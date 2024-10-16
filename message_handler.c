@@ -29,7 +29,7 @@ int process_message(char *buffer, char *sender, int sender_socket) {
         return 1; 
     } 
     // Broadcast messages to all clients
-    else if(sscanf(buffer, "/all %s %[^\n]", message) == 1){
+    else if(sscanf(buffer, "/all %[^\n]", message) == 1){
         char full_message[BUFFER_SIZE];
         sprintf(full_message, "MSG: %s: %s\n", sender, message);
         broadcast_message(full_message, sender_socket);
